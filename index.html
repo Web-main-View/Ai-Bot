@@ -2299,37 +2299,48 @@ function showMarketErrorMessage(message) {
             document.getElementById('detailWalletBalance').textContent = `$${appState.balances.totalUSD.toFixed(2).toLocaleString()}`;
         }
         
-        function renderTradeUI() {
-            document.getElementById('tradeBalanceDisplay').textContent = `$${appState.balances.tradeUSD.toFixed(2).toLocaleString()}`;
-            document.getElementById('tradeReturnsDisplay').textContent = `$${appState.trade.totalReturns.toFixed(2).toLocaleString()}`;
-            document.getElementById('earningsTotalDisplay').textContent = `$${appState.trade.totalReturns.toFixed(2).toLocaleString()}`;
-            
-            const isActive = appState.trade.active;
-            const statusBox = document.getElementById('activeTradeStatus');
-            const placeBtn = document.getElementById('placeTradeBtn');
-            const assetSymbolElem = document.getElementById('tradeAssetSymbol');
-            
-            statusBox.classList.toggle('hidden', !isActive);
-            placeBtn.classList.toggle('hidden', isActive);
+        
 
-            if (isActive) {
-                const tvSymbol = appState.trade.asset.split(':')[1];
-                assetSymbolElem.textContent = tvSymbol;
-                document.getElementById('tradeAssetDetails').textContent = 
-                    `Asset: ${tvSymbol} | Initial: $${appState.trade.initialAmount.toFixed(2)} | Duration: ${appState.trade.durationMonths} months.`;
-                startTradeCountdown(); // Ensure countdown is running
-            } else {
-                 assetSymbolElem.textContent = 'BTCUSDT';
-            }
-            
-            // Re-initialize chart with current asset
-            initializeTradingViewChart('tradeLiveChart', appState.trade.asset);
-            initializeTradingViewChart('earningsLiveChart', appState.trade.asset);
+function renderTradeUI() {
+    document.getElementById('tradeBalanceDisplay').textContent = `$${appState.balances.tradeUSD.toFixed(2)}`;
+    document.getElementById('tradeReturnsDisplay').textContent = `$${appState.trade.totalReturns.toFixed(2)}`;
+    document.getElementById('earningsTotalDisplay').textContent = `$${appState.trade.totalReturns.toFixed(2)}`;
+    
+    const isActive = appState.trade.active;
+    const statusBox = document.getElementById('activeTradeStatus');
+    const placeBtn = document.getElementById('placeTradeBtn');
+    const assetSymbolElem = document.getElementById('tradeAssetSymbol');
+    
+    statusBox.classList.toggle('hidden', !isActive);
+    placeBtn.classList.toggle('hidden', isActive);
 
-            // Update footer active tab
-            document.querySelectorAll('.nav-tab').forEach(btn => btn.classList.remove('text-binance-accent-yellow'));
-            document.querySelector('.nav-tab[data-page="tradePage"]').classList.add('text-binance-accent-yellow');
-        }
+    if (isActive) {
+        const tvSymbol = appState.trade.asset.split(':')[1];
+        assetSymbolElem.textContent = tvSymbol;
+        document.getElementById('tradeAssetDetails').textContent = 
+            `Asset: ${tvSymbol} | Initial: $${appState.trade.initialAmount.toFixed(2)} | Duration: ${appState.trade.durationMonths} months.`;
+        startTradeCountdown();
+    } else {
+        assetSymbolElem.textContent = 'BTCUSDT';
+    }
+
+    // ✅ Keep charts alive — Only create if not already created or asset changed
+    if (!tradeChartInstance || tradeChartInstance.asset !== appState.trade.asset) {
+        tradeChartInstance = initializeTradingViewChart('tradeLiveChart', appState.trade.asset);
+        tradeChartInstance.asset = appState.trade.asset;
+    }
+
+    if (!earningsChartInstance || earningsChartInstance.asset !== appState.trade.asset) {
+        earningsChartInstance = initializeTradingViewChart('earningsLiveChart', appState.trade.asset);
+        earningsChartInstance.asset = appState.trade.asset;
+    }
+
+    // Highlight active tab
+    document.querySelectorAll('.nav-tab').forEach(btn => 
+        btn.classList.remove('text-binance-accent-yellow')
+    );
+    document.querySelector('.nav-tab[data-page="tradePage"]').classList.add('text-binance-accent-yellow');
+   }
 
         function renderFullActivitiesList() {
             const container = document.getElementById('fullActivitiesList');
